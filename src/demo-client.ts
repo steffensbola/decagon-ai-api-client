@@ -1,4 +1,4 @@
-// example.ts
+
 import DecagonAPI from './api';
 
 const baseURL = 'https://api.decagon.ai';
@@ -33,6 +33,26 @@ async function main() {
   };
   const chatResponse = await decagonAPI.chatCompletion(userId, chatRequest);
   console.log('Chat Response:', chatResponse.events);
+
+  // WebSocket connection
+  decagonAPI.connectWebSocket(userId, (message) => {
+    console.log('WebSocket Message:', message);
+  });
+
+  // Send a WebSocket message
+  const wsMessage = {
+    type: 'message',
+    data: {
+      conversation_id: newConversation.conversation_id,
+      text: 'Hello from WebSocket!',
+    },
+  };
+  decagonAPI.sendWebSocketMessage(wsMessage);
+
+  // Close the WebSocket connection after some time
+  setTimeout(() => {
+    decagonAPI.closeWebSocket();
+  }, 10000);
 }
 
 main().catch(console.error);

@@ -1,12 +1,13 @@
-// api.ts
 import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
-import { AuthToken, NewConversationResponse, UserConversationsResponse, ConversationHistoryResponse, ChatCompletionRequest, ChatCompletionResponse } from './types';
+import WebSocket from 'ws';
+import { AuthToken, NewConversationResponse, UserConversationsResponse, ConversationHistoryResponse, ChatCompletionRequest, ChatCompletionResponse, WebSocketMessage } from './types';
 
 class DecagonAPI {
   private readonly apiClient: AxiosInstance;
   private readonly teamId: string;
   private readonly privateKey: string;
+  private wsClient?: WebSocket;
 
   constructor(baseURL: string, teamId: string, privateKey: string) {
     this.apiClient = axios.create({ baseURL });
@@ -89,6 +90,55 @@ class DecagonAPI {
     this.setAuthHeaders(userId);
     const response = await this.apiClient.post<ChatCompletionResponse>('/chat/completion', request);
     return response.data;
+  }
+
+  /**
+   * Connects to the WebSocket server.
+   * @param userId - The user ID.
+   * @param onMessage - Callback function to handle incoming messages.
+   */
+  public connectWebSocket(userId: string, onMessage: (message: WebSocketMessage) => void) {
+    const token = this.generateAuthToken(userId);
+    const wsUrl = `wss://api.decagon.ai/ws?user_id=${token.user_id}&team_id=${this.teamId}&signature=${token.signature}&epoch=${token.epoch}`;
+    this.wsClient = new WebSocket(wsUrl);
+
+    this.wsClient.on('open', () => {
+      console.log('WebSocket connection opened');
+    });
+
+    this.wsClient.on('message', (data) => {
+      const message: WebSocketMessage = JSON.parse(data.toString());
+      onMessage(message);
+    });
+
+    this.wsClient.on('close', () => {
+      console.log('WebSocket connection closed');
+    });
+
+    this.wsClient.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  }
+
+  /**
+   * Sends a message over the WebSocket connection.
+   * @param message - The message to send.
+   */
+  public sendWebSocketMessage(message: WebSocketMessage) {
+    if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
+      this.wsClient.send(JSON.stringify(message));
+    } else {
+      console.error('WebSocket is not open');
+    }
+  }
+
+  /**
+   * Closes the WebSocket connection.
+   */
+  public closeWebSocket() {
+    if (this.wsClient) {
+      this.wsClient.close();
+    }
   }
 }
 

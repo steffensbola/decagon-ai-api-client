@@ -1,4 +1,3 @@
-// types.ts
 export interface AuthToken {
   user_id: string;
   epoch: number;
@@ -56,4 +55,9 @@ export interface Event {
   choices?: string[];
   message?: string[];
   error?: string;
+}
+
+export interface WebSocketMessage {
+  type: string;
+  data: any;
 }
