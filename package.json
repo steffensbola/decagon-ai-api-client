@@ -1,0 +1,28 @@
+{
+  "name": "decagon-api-sample-client",
+  "version": "1.0.0",
+  "description": "Decagon AI API Sample client",
+  "main": "src/demo-client.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/demo-client.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "decagon",
+    "chatbot",
+    "gpt"
+  ],
+  "author": "Cristiano Steffens",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.6.3",
+    "@types/bun": "latest"
+  }
+}
