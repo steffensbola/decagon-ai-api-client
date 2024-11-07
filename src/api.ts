@@ -93,6 +93,27 @@ class DecagonAPI {
   }
 
   /**
+   * Sets conversation as read.
+   * @param userId - The user ID.
+   * @param conversationId - The conversation ID.
+   */
+  public async markConversationRead(userId: string, conversationId: string): Promise<void> {
+    this.setAuthHeaders(userId);
+    await this.apiClient.post('/conversation/mark_read', { conversation_id: conversationId });
+  }
+
+  /**
+   * Sets the CSAT score for a conversation.
+   * @param userId - The user ID.
+   * @param conversationId - The conversation ID.
+   * @param score 
+   */
+  public async setCSAT(userId: string, conversationId: string, score: number): Promise<void> {
+    this.setAuthHeaders(userId);
+    await this.apiClient.post('/csat/set', { conversation_id: conversationId, score });
+  }
+
+  /**
    * Connects to the WebSocket server.
    * @param userId - The user ID.
    * @param onMessage - Callback function to handle incoming messages.
