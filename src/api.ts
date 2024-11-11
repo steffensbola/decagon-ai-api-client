@@ -21,6 +21,12 @@ class DecagonAPI {
    * @returns The authentication token.
    */
   private generateAuthToken(userId: string): AuthToken {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!this.privateKey) {
+      throw new Error('Private key is required');
+    }
     const epoch = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // Token valid for 24 hours
     const message = userId + epoch;
     const signature = crypto.createHmac('sha256', this.privateKey).update(message).digest('hex');
@@ -37,6 +43,9 @@ class DecagonAPI {
    * @param userId - The user ID.
    */
   private setAuthHeaders(userId: string) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     const token = this.generateAuthToken(userId);
     this.apiClient.defaults.headers.common['X-DECAGON-AUTH-USER-ID'] = token.user_id;
     this.apiClient.defaults.headers.common['X-DECAGON-AUTH-TEAM-ID'] = this.teamId;
@@ -75,6 +84,12 @@ class DecagonAPI {
    * @returns The response containing the conversation history.
    */
   public async getConversationHistory(userId: string, conversationId: string): Promise<ConversationHistoryResponse> {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!conversationId) {
+      throw new Error('Conversation ID is required');
+    }
     this.setAuthHeaders(userId);
     const response = await this.apiClient.get<ConversationHistoryResponse>('/conversation/history', { params: { conversation_id: conversationId } });
     return response.data;
@@ -87,6 +102,9 @@ class DecagonAPI {
    * @returns The response containing the chat completion events.
    */
   public async chatCompletion(userId: string, request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
+    if (!request) {
+      throw new Error('Invalid chat completion request');
+    }
     this.setAuthHeaders(userId);
     const response = await this.apiClient.post<ChatCompletionResponse>('/chat/completion', request);
     return response.data;
@@ -98,6 +116,12 @@ class DecagonAPI {
    * @param conversationId - The conversation ID.
    */
   public async markConversationRead(userId: string, conversationId: string): Promise<void> {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!conversationId) {
+      throw new Error('Conversation ID is required');
+    }
     this.setAuthHeaders(userId);
     await this.apiClient.post('/conversation/mark_read', { conversation_id: conversationId });
   }
@@ -109,6 +133,15 @@ class DecagonAPI {
    * @param score 
    */
   public async setCSAT(userId: string, conversationId: string, score: number): Promise<void> {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!conversationId) {
+      throw new Error('Conversation ID is required');
+    }
+    if (score === undefined || score === null) {
+      throw new Error('Score is required');
+    }
     this.setAuthHeaders(userId);
     await this.apiClient.post('/csat/set', { conversation_id: conversationId, score });
   }
@@ -119,6 +152,12 @@ class DecagonAPI {
    * @param onMessage - Callback function to handle incoming messages.
    */
   public connectWebSocket(userId: string, onMessage: (message: WebSocketMessage) => void) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!onMessage) {
+      throw new Error('onMessage callback is required');
+    }
     const token = this.generateAuthToken(userId);
     const wsUrl = `wss://api.decagon.ai/ws?user_id=${token.user_id}&team_id=${this.teamId}&signature=${token.signature}&epoch=${token.epoch}`;
     this.wsClient = new WebSocket(wsUrl);
@@ -146,6 +185,9 @@ class DecagonAPI {
    * @param message - The message to send.
    */
   public sendWebSocketMessage(message: WebSocketMessage) {
+    if (!message) {
+      throw new Error('Message is required');
+    }
     if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
       this.wsClient.send(JSON.stringify(message));
     } else {

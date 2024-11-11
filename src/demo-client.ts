@@ -1,15 +1,19 @@
 
 import DecagonAPI from './api';
+import dotenv from 'dotenv';
 
-const baseURL = 'https://api.decagon.ai';
-const teamId = 'your-team-id';
-const privateKey = 'your-private-key';
+dotenv.config();
+
+const baseURL = process.env.BASE_URL!;
+const teamId = process.env.TEAM_ID!;
+const privateKey = process.env.PRIVATE_KEY!;
+const flowId = process.env.FLOW_ID!
+
 
 const decagonAPI = new DecagonAPI(baseURL, teamId, privateKey);
 
 async function main() {
   const userId = 'user123';
-  const flowId = 'flow123';
   const metadata = { key: 'value' };
 
   // Create a new conversation
