@@ -13,7 +13,7 @@ const flowId = process.env.FLOW_ID!
 const decagonAPI = new DecagonAPI(baseURL, teamId, privateKey);
 
 async function main() {
-  const userId = 'user123';
+  const userId = 'user1234';
   const metadata = { 
     user_type: 'user_type',
     email: 'emaile@example.org',
@@ -36,7 +36,7 @@ async function main() {
     conversation_id: newConversation.conversation_id,
     text: 'Hi, how do i set up split payments?',
     flow_id: flowId,
-    metadata,
+    metadata
   };
   const chatResponse = await decagonAPI.chatCompletion(userId, chatRequest);
   console.log('Chat Response:', chatResponse.map((event) => event.text));
@@ -48,21 +48,29 @@ async function main() {
   // Set CSAT
   const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.conversation_id, 5);
   console.log('Conversation CSAT:', conversationCsat);
-  
-  // WebSocket connection
-  decagonAPI.connectWebSocket(userId, (message) => {
-    console.log('WebSocket Message:', message);
-  });
 
-  // Send a WebSocket message
+
+  // Prepare a WebSocket message
   const wsMessage = {
-    type: 'message',
-    data: {
-      conversation_id: newConversation.conversation_id,
       text: 'Hello from WebSocket!',
+      type: 'chat_message',
+      flow_id: flowId,
+      metadata: {'newField': 'this is new metadata pushed from the web socket',
+        'richMetadataField': {business_name: 'the name', studio_id: "the studioId", a_nested_object:{a_property: 'prop_value'}}, ...metadata},
+    };
+
+  // WebSocket connection
+  decagonAPI.connectWebSocket(
+    userId, 
+    newConversation.conversation_id, 
+    ()=> {
+      const response = decagonAPI.sendWebSocketMessage(wsMessage)
+      console.log('WebSocket Response:', response)
     },
-  };
-  decagonAPI.sendWebSocketMessage(wsMessage);
+    (message) => {
+      console.log('WebSocket Message:', message)
+    }
+  );
 
   // Close the WebSocket connection after some time
   setTimeout(() => {

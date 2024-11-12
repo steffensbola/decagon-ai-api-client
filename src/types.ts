@@ -70,3 +70,10 @@ export interface WebSocketMessage {
   type: string;
   data: any;
 }
+
+export interface MessagePayload {
+  text: string;
+  flow_id: string;
+  metadata: Record<string, any>;
+  action_id?: string;
+}

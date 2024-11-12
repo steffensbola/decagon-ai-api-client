@@ -1,13 +1,14 @@
 import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
 import WebSocket from 'ws';
-import { AuthToken, NewConversationResponse, UserConversationsResponse, ConversationHistoryResponse, ChatCompletionRequest, ChatCompletionResponse, WebSocketMessage } from './types';
+import { AuthToken, NewConversationResponse, UserConversationsResponse, ConversationHistoryResponse, ChatCompletionRequest, ChatCompletionResponse, WebSocketMessage, MessagePayload } from './types';
 
 class DecagonAPI {
   private readonly apiClient: AxiosInstance;
   private readonly teamId: string;
   private readonly privateKey: string;
   private wsClient?: WebSocket;
+  private isWsConnected: boolean = false;
 
   constructor(baseURL: string, teamId: string, privateKey: string) {
     this.apiClient = axios.create({ baseURL });
@@ -21,6 +22,9 @@ class DecagonAPI {
    * @returns The authentication token.
    */
   private generateAuthToken(userId: string): AuthToken {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     if (!userId) {
       throw new Error('User ID is required');
     }
@@ -43,6 +47,9 @@ class DecagonAPI {
    * @param userId - The user ID.
    */
   private setAuthHeaders(userId: string) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     if (!userId) {
       throw new Error('User ID is required');
     }
@@ -87,6 +94,9 @@ class DecagonAPI {
     if (!userId) {
       throw new Error('User ID is required');
     }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     if (!conversationId) {
       throw new Error('Conversation ID is required');
     }
@@ -119,6 +129,9 @@ class DecagonAPI {
     if (!userId) {
       throw new Error('User ID is required');
     }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     if (!conversationId) {
       throw new Error('Conversation ID is required');
     }
@@ -136,6 +149,9 @@ class DecagonAPI {
     if (!userId) {
       throw new Error('User ID is required');
     }
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
     if (!conversationId) {
       throw new Error('Conversation ID is required');
     }
@@ -147,24 +163,30 @@ class DecagonAPI {
     return result.data;
   }
 
+
   /**
    * Connects to the WebSocket server.
    * @param userId - The user ID.
    * @param onMessage - Callback function to handle incoming messages.
    */
-  public connectWebSocket(userId: string, onMessage: (message: WebSocketMessage) => void) {
+  public connectWebSocket(userId: string, conversation_id: string, onConnect: ()=>void , onMessage: (message: WebSocketMessage) => void) {
     if (!userId) {
+      throw new Error('User ID is required');
+    }
+    if (!conversation_id) {
       throw new Error('User ID is required');
     }
     if (!onMessage) {
       throw new Error('onMessage callback is required');
     }
     const token = this.generateAuthToken(userId);
-    const wsUrl = `wss://api.decagon.ai/ws?user_id=${token.user_id}&team_id=${this.teamId}&signature=${token.signature}&epoch=${token.epoch}`;
+    const wsUrl = `wss://api.decagon.ai/chat/${conversation_id}`;
     this.wsClient = new WebSocket(wsUrl);
 
     this.wsClient.on('open', () => {
       console.log('WebSocket connection opened');
+      onConnect();
+      this.isWsConnected = true;
     });
 
     this.wsClient.on('message', (data) => {
@@ -174,10 +196,12 @@ class DecagonAPI {
 
     this.wsClient.on('close', () => {
       console.log('WebSocket connection closed');
+      this.isWsConnected = false;
     });
 
     this.wsClient.on('error', (error) => {
       console.error('WebSocket error:', error);
+      this.isWsConnected = false;
     });
   }
 
@@ -185,10 +209,11 @@ class DecagonAPI {
    * Sends a message over the WebSocket connection.
    * @param message - The message to send.
    */
-  public sendWebSocketMessage(message: WebSocketMessage) {
+  public sendWebSocketMessage(message: MessagePayload) {
     if (!message) {
       throw new Error('Message is required');
     }
+    console.log('Sending message:', message);
     if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
       this.wsClient.send(JSON.stringify(message));
     } else {
