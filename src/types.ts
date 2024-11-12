@@ -22,6 +22,12 @@ export interface Message {
   text: string;
   created_at: string;
   time_ago: string;
+  articles_used: Article[];
+}
+
+interface Article {
+  content: string;
+  url: string;
 }
 
 export interface NewConversationResponse {
@@ -47,7 +53,7 @@ export interface ChatCompletionRequest {
 
 export type ChatCompletionResponse = ChatCompletionResponseEvent[];
 
-export type ChatCompletionEventType = 'start_typing'| 'chat_message' | 'stop_typing';
+export type ChatCompletionEventType = 'start_typing'| 'chat_message' | 'stop_typing' | 'close_conversation' | 'escalation_to_human' | 'chat_actions' | 'suggested_messages' | 'error';
 
 export interface ChatCompletionResponseEvent {
   type: ChatCompletionEventType | string;
