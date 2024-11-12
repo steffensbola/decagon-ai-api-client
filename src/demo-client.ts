@@ -30,14 +30,7 @@ async function main() {
   const userConversations = await decagonAPI.getUserConversations(userId);
   console.log('User Conversations:', userConversations.conversations);
 
-  // Get conversation history
-  const conversationHistory = await decagonAPI.getConversationHistory(userId, newConversation.conversation_id);
-  console.log('Conversation History:', conversationHistory.messages);
-
-  // Set CSAT
-  const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.conversation_id, 5);
-  console.log('Conversation CSAT:', conversationCsat);
-
+  
   // Chat completion
   const chatRequest = {
     conversation_id: newConversation.conversation_id,
@@ -47,7 +40,15 @@ async function main() {
   };
   const chatResponse = await decagonAPI.chatCompletion(userId, chatRequest);
   console.log('Chat Response:', chatResponse.map((event) => event.text));
+  
+  // Get conversation history
+  const conversationHistory = await decagonAPI.getConversationHistory(userId, newConversation.conversation_id);
+  console.log('Conversation History:', conversationHistory.messages);
 
+  // Set CSAT
+  const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.conversation_id, 5);
+  console.log('Conversation CSAT:', conversationCsat);
+  
   // WebSocket connection
   decagonAPI.connectWebSocket(userId, (message) => {
     console.log('WebSocket Message:', message);
