@@ -13,10 +13,12 @@ export interface Conversation {
   num_unread_messages: number;
 }
 
+export type MessageRole = 'AI' | 'AGENT' | 'USER';
+
 export interface Message {
   id: number;
   conversation_id: string;
-  role: 'AI' | 'AGENT' | 'USER';
+  role: MessageRole;
   text: string;
   created_at: string;
   time_ago: string;
@@ -43,18 +45,19 @@ export interface ChatCompletionRequest {
   action_id?: string;
 }
 
-export interface ChatCompletionResponse {
-  events: Event[];
-}
+export type ChatCompletionResponse = ChatCompletionResponseEvent[];
 
-export interface Event {
-  type: string;
-  role?: 'AI' | 'AGENT';
+export type ChatCompletionEventType = 'start_typing'| 'chat_message' | 'stop_typing';
+
+export interface ChatCompletionResponseEvent {
+  type: ChatCompletionEventType | string;
+  role?: MessageRole;
   text?: string;
   channel?: string;
   choices?: string[];
   message?: string[];
   error?: string;
+  chosen_playbook: string;
 }
 
 export interface WebSocketMessage {

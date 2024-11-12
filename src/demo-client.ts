@@ -46,7 +46,7 @@ async function main() {
     metadata,
   };
   const chatResponse = await decagonAPI.chatCompletion(userId, chatRequest);
-  console.log('Chat Response:', chatResponse.events);
+  console.log('Chat Response:', chatResponse.map((event) => event.text));
 
   // WebSocket connection
   decagonAPI.connectWebSocket(userId, (message) => {
