@@ -49,8 +49,8 @@ class DecagonAPI {
     const token = this.generateAuthToken(userId);
     this.apiClient.defaults.headers.common['X-DECAGON-AUTH-USER-ID'] = token.user_id;
     this.apiClient.defaults.headers.common['X-DECAGON-AUTH-TEAM-ID'] = this.teamId;
-    this.apiClient.defaults.headers.common['X-DECAGON-AUTH-SIGNATURE'] = token.signature;
-    this.apiClient.defaults.headers.common['X-DECAGON-AUTH-EPOCH'] = token.epoch.toString();
+    // this.apiClient.defaults.headers.common['X-DECAGON-AUTH-SIGNATURE'] = token.signature;
+    // this.apiClient.defaults.headers.common['X-DECAGON-AUTH-EPOCH'] = token.epoch.toString();
   }
 
   /**
@@ -91,7 +91,7 @@ class DecagonAPI {
       throw new Error('Conversation ID is required');
     }
     this.setAuthHeaders(userId);
-    const response = await this.apiClient.get<ConversationHistoryResponse>('/conversation/history', { params: { conversation_id: conversationId } });
+    const response = await this.apiClient.get<ConversationHistoryResponse>('/conversation/history', { params: { conversation_id: conversationId, trigger_message: '' } });
     return response.data;
   }
 
@@ -143,7 +143,8 @@ class DecagonAPI {
       throw new Error('Score is required');
     }
     this.setAuthHeaders(userId);
-    await this.apiClient.post('/csat/set', { conversation_id: conversationId, score });
+    const result = await this.apiClient.post('/csat/set', { conversation_id: conversationId, csat: score });
+    return result.data;
   }
 
   /**

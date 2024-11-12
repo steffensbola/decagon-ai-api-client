@@ -14,11 +14,17 @@ const decagonAPI = new DecagonAPI(baseURL, teamId, privateKey);
 
 async function main() {
   const userId = 'user123';
-  const metadata = { key: 'value' };
+  const metadata = { 
+    user_type: 'user_type',
+    email: 'emaile@example.org',
+    firstName: 'Chris',
+    lastName: 'Steffens',
+  };
+
 
   // Create a new conversation
   const newConversation = await decagonAPI.createNewConversation(userId, flowId, metadata);
-  console.log('New Conversation ID:', newConversation.conversation_id);
+  console.log('New Conversation:', newConversation);
 
   // Get user conversations
   const userConversations = await decagonAPI.getUserConversations(userId);
@@ -28,10 +34,14 @@ async function main() {
   const conversationHistory = await decagonAPI.getConversationHistory(userId, newConversation.conversation_id);
   console.log('Conversation History:', conversationHistory.messages);
 
+  // Set CSAT
+  const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.conversation_id, 5);
+  console.log('Conversation CSAT:', conversationCsat);
+
   // Chat completion
   const chatRequest = {
     conversation_id: newConversation.conversation_id,
-    text: 'Hello, how can I help you?',
+    text: 'Hi, how do i set up split payments?',
     flow_id: flowId,
     metadata,
   };
