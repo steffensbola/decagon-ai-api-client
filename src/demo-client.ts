@@ -1,6 +1,7 @@
 
 import DecagonAPI from './api';
 import dotenv from 'dotenv';
+import { safeAsync } from './safe-async';
 
 dotenv.config();
 
@@ -16,15 +17,16 @@ async function main() {
   const userId = 'user1234';
   const metadata = { 
     user_type: 'user_type',
-    email: 'emaile@example.org',
+    email: 'email@example.org',
     firstName: 'Chris',
     lastName: 'Steffens',
   };
 
 
   // Create a new conversation
-  const newConversation = await decagonAPI.createNewConversation(userId, flowId, metadata);
-  console.log('New Conversation:', newConversation);
+  const newConversation = await safeAsync(() => decagonAPI.createNewConversation(userId, flowId, metadata));
+  if(newConversation.error) return console.error('Error:', newConversation.error);
+  console.log('New Conversation:', newConversation.data);
 
   // Get user conversations
   const userConversations = await decagonAPI.getUserConversations(userId);
@@ -33,8 +35,8 @@ async function main() {
   
   // Chat completion
   const chatRequest = {
-    conversation_id: newConversation.conversation_id,
-    text: 'Hi, how do i set up split payments?',
+    conversation_id: newConversation.data.conversation_id,
+    text: 'Hi, how can I edit contact information?',
     flow_id: flowId,
     metadata
   };
@@ -42,12 +44,17 @@ async function main() {
   console.log('Chat Response:', chatResponse.map((event) => event.text));
   
   // Get conversation history
-  const conversationHistory = await decagonAPI.getConversationHistory(userId, newConversation.conversation_id);
+  const conversationHistory = await decagonAPI.getConversationHistory(userId, newConversation.data.conversation_id);
   console.log('Conversation History:', conversationHistory.messages);
 
   // Set CSAT
-  const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.conversation_id, 5);
+  const conversationCsat = await decagonAPI.setCSAT(userId, newConversation.data.conversation_id, 5);
   console.log('Conversation CSAT:', conversationCsat);
+
+  // Set ar read
+  const markReadResult = await safeAsync(() => decagonAPI.markConversationRead(userId, newConversation.data.conversation_id));
+  if(markReadResult.error) return console.log('Error marking conversation as read:', markReadResult.error);
+  console.log('Conversation marked as read');
 
 
   // Prepare a WebSocket message
@@ -62,10 +69,9 @@ async function main() {
   // WebSocket connection
   decagonAPI.connectWebSocket(
     userId, 
-    newConversation.conversation_id, 
+    newConversation.data.conversation_id, 
     ()=> {
-      const response = decagonAPI.sendWebSocketMessage(wsMessage)
-      console.log('WebSocket Response:', response)
+      decagonAPI.sendWebSocketMessage(wsMessage)
     },
     (message) => {
       console.log('WebSocket Message:', message)
